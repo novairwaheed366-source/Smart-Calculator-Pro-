@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Smart Calculator Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════
+   ROOT & RESET
+═══════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#060912;
+  --g1:rgba(255,255,255,0.035);
+  --g2:rgba(255,255,255,0.07);
+  --g3:rgba(255,255,255,0.12);
+  --brd:rgba(255,255,255,0.08);
+  --brd2:rgba(255,255,255,0.16);
+  --gold:#f5c518;
+  --gold2:#c9a010;
+  --blue:#3d8ef5;
+  --blue2:#1a5fc4;
+  --green:#1dc98a;
+  --red:#f55252;
+  --purple:#a78bfa;
+  --orange:#fb923c;
+  --txt:#e8eeff;
+  --sub:rgba(232,238,255,0.45);
+  --sub2:rgba(232,238,255,0.25);
+  --r:16px;
+  --R:22px;
+  --sh:0 8px 32px rgba(0,0,0,0.5);
+  --shL:0 20px 60px rgba(0,0,0,0.7);
+  --ease:cubic-bezier(0.4,0,0.2,1);
+  --spring:cubic-bezier(0.34,1.56,0.64,1);
+  --fast:cubic-bezier(0.2,0,0,1);
+}
+html,body{height:100%;overflow-x:hidden;background:var(--bg);}
+body{
+  font-family:'Cairo',sans-serif;color:var(--txt);
+  background-image:
+    radial-gradient(ellipse 70% 40% at 15% 5%,  rgba(61,142,245,0.07) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 35% at 85% 85%, rgba(245,197,24,0.05)  0%,transparent 60%),
+    radial-gradient(ellipse 40% 50% at 50% 50%, rgba(167,139,250,0.03) 0%,transparent 70%);
+}
+
+/* ═══════════════════════════════════════
+   SPLASH
+═══════════════════════════════════════ */
+#splash{
+  position:fixed;inset:0;z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 40%,#0c1530 0%,#060912 70%);
+  transition:opacity .7s var(--ease), transform .7s var(--ease);
+}
+#splash.out{opacity:0;transform:scale(1.05);pointer-events:none;}
+
+.sp-orbit{position:relative;width:110px;height:110px;margin-bottom:28px;}
+.sp-ring{position:absolute;border-radius:50%;border:1.5px solid transparent;inset:0;}
+.sp-r1{border-top-color:var(--gold);border-right-color:rgba(245,197,24,.2);animation:orb 1.8s linear infinite;}
+.sp-r2{inset:14px;border-bottom-color:var(--blue);border-left-color:rgba(61,142,245,.2);animation:orb 2.6s linear infinite reverse;}
+.sp-r3{inset:27px;border-top-color:var(--purple);animation:orb 3.5s linear infinite;}
+.sp-ico{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;animation:breathe 2.5s ease-in-out infinite;}
+@keyframes orb{to{transform:rotate(360deg);}}
+@keyframes breathe{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+
+.sp-title{
+  font-size:1.75rem;font-weight:900;letter-spacing:.5px;
+  background:linear-gradient(120deg,var(--gold) 0%,#fff 45%,var(--blue) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:fadeUp .5s var(--spring) .3s both;
+}
+.sp-sub{
+  font-size:.78rem;color:var(--sub);letter-spacing:3px;text-transform:uppercase;
+  margin-top:4px;animation:fadeUp .5s var(--spring) .45s both;
+}
+.sp-track{width:160px;height:2px;background:rgba(255,255,255,.07);border-radius:99px;margin-top:30px;overflow:hidden;animation:fadeUp .4s ease .6s both;}
+.sp-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--gold));animation:fill 1.7s var(--fast) .8s both;}
+@keyframes fill{from{width:0}to{width:100%}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+/* ═══════════════════════════════════════
+   APP WRAPPER
+═══════════════════════════════════════ */
+#app{
+  max-width:500px;margin:0 auto;padding:10px 10px 90px;
+  opacity:0;transform:translateY(18px);
+  transition:opacity .55s var(--ease), transform .55s var(--spring);
+}
+#app.show{opacity:1;transform:translateY(0);}
+
+/* ═══════════════════════════════════════
+   HEADER
+═══════════════════════════════════════ */
+.hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;margin-bottom:9px;
+  background:var(--g2);backdrop-filter:blur(30px);
+  border:1px solid var(--brd);border-radius:var(--R);
+  box-shadow:var(--sh);
+  animation:fadeUp .45s var(--spring) .05s both;
+}
+.hdr-l{display:flex;align-items:center;gap:10px;}
+.hdr-ico{
+  width:38px;height:38px;border-radius:11px;font-size:1.25rem;
+  background:linear-gradient(135deg,rgba(245,197,24,.14),rgba(61,142,245,.14));
+  border:1px solid rgba(245,197,24,.22);
+  display:flex;align-items:center;justify-content:center;
+}
+.hdr-name{font-size:.95rem;font-weight:800;color:var(--gold);line-height:1.1;}
+.hdr-sub{font-size:.62rem;color:var(--sub2);margin-top:1px;}
+.hdr-r{text-align:left;}
+.hdr-num{font-size:1.3rem;font-weight:900;color:var(--gold);font-family:'JetBrains Mono',monospace;line-height:1;}
+.hdr-lbl{font-size:.6rem;color:var(--sub2);}
+
+/* ═══════════════════════════════════════
+   NAV — 3 tabs only
+═══════════════════════════════════════ */
+.nav{
+  display:flex;gap:5px;margin-bottom:9px;
+  background:var(--g1);backdrop-filter:blur(20px);
+  border:1px solid var(--brd);border-radius:var(--R);padding:5px;
+  animation:fadeUp .45s var(--spring) .1s both;
+}
+.nb{
+  flex:1;padding:10px 4px;border:none;border-radius:13px;
+  background:transparent;color:var(--sub);
+  font-family:'Cairo',sans-serif;font-size:.75rem;font-weight:600;
+  cursor:pointer;transition:all .22s var(--ease);
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.nb .ni{font-size:1.15rem;transition:transform .3s var(--spring);}
+.nb:hover .ni{transform:scale(1.2);}
+.nb.on{
+  background:linear-gradient(135deg,rgba(245,197,24,.12),rgba(61,142,245,.12));
+  color:var(--gold);
+  box-shadow:0 2px 12px rgba(245,197,24,.1),inset 0 1px 0 rgba(255,255,255,.07);
+}
+.nb.on .ni{transform:scale(1.12);}
+
+/* ═══════════════════════════════════════
+   TABS
+═══════════════════════════════════════ */
+.tab{display:none;}
+.tab.on{display:block;animation:tabIn .3s var(--ease);}
+@keyframes tabIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ═══════════════════════════════════════
+   DISPLAY SCREEN
+═══════════════════════════════════════ */
+.screen{
+  background:linear-gradient(155deg,rgba(255,255,255,.055) 0%,rgba(255,255,255,.015) 100%);
+  backdrop-filter:blur(40px);
+  border:1px solid var(--brd);border-radius:var(--R);
+  padding:18px 18px 14px;margin-bottom:9px;min-height:148px;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  position:relative;overflow:hidden;
+  box-shadow:var(--sh),inset 0 1px 0 rgba(255,255,255,.055);
+  animation:fadeUp .45s var(--spring) .15s both;
+}
+.screen::before{
+  content:'';position:absolute;top:-30%;right:-15%;
+  width:260px;height:260px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(245,197,24,.04) 0%,transparent 70%);
+}
+/* AI panel inside screen */
+.ai-panel{
+  font-size:.72rem;color:var(--blue);line-height:1.6;
+  max-height:0;overflow:hidden;
+  transition:max-height .45s var(--ease), opacity .3s ease, margin .3s ease;
+  opacity:0;margin-bottom:0;
+}
+.ai-panel.show{max-height:100px;opacity:1;margin-bottom:8px;}
+.ai-panel-inner{
+  background:rgba(61,142,245,.07);border:1px solid rgba(61,142,245,.15);
+  border-radius:9px;padding:7px 10px;font-family:'Cairo',sans-serif;
+}
+
+.scr-prev{font-size:.68rem;color:var(--sub2);font-family:'JetBrains Mono',monospace;min-height:15px;margin-bottom:2px;transition:opacity .2s;}
+.scr-eq{font-family:'JetBrains Mono',monospace;font-size:.84rem;color:var(--sub);min-height:20px;margin-bottom:5px;word-break:break-all;transition:opacity .2s;}
+.scr-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(2rem,9.5vw,3.1rem);font-weight:700;color:var(--txt);
+  word-break:break-all;line-height:1.1;
+  transition:transform .18s var(--spring), color .2s ease;
+}
+.scr-num.pop{transform:scale(1.025);}
+.scr-num.err{color:var(--red);}
+
+/* op-count badge */
+.op-badge{
+  position:absolute;top:12px;left:14px;
+  background:rgba(167,139,250,.13);border:1px solid rgba(167,139,250,.25);
+  border-radius:8px;padding:3px 9px;
+  font-size:.65rem;color:var(--purple);font-family:'JetBrains Mono',monospace;
+  opacity:0;transform:scale(.8);
+  transition:opacity .3s var(--spring), transform .3s var(--spring);
+}
+.op-badge.show{opacity:1;transform:scale(1);}
+
+.scr-acts{display:flex;gap:5px;margin-top:12px;flex-wrap:wrap;}
+.sa{
+  background:rgba(255,255,255,.06);border:1px solid var(--brd);
+  border-radius:7px;color:var(--sub);font-size:.65rem;
+  padding:4px 9px;cursor:pointer;font-family:'Cairo',sans-serif;
+  transition:all .18s var(--ease);
+}
+.sa:hover{background:rgba(255,255,255,.12);color:var(--txt);}
+.sa.ok{color:var(--green);border-color:rgba(29,201,138,.25);}
+/* AI explain button */
+.sa.ai{color:var(--blue);border-color:rgba(61,142,245,.25);}
+.sa.ai:hover{background:rgba(61,142,245,.1);}
+.sa.ai.loading{opacity:.6;cursor:wait;}
+
+/* ═══════════════════════════════════════
+   MODE TOGGLE
+═══════════════════════════════════════ */
+.modes{display:flex;gap:5px;margin-bottom:8px;}
+.mb{
+  flex:1;padding:7px;border:1px solid var(--brd);border-radius:10px;
+  background:var(--g1);color:var(--sub);font-family:'Cairo',sans-serif;
+  font-size:.76rem;font-weight:600;cursor:pointer;transition:all .2s var(--ease);
+}
+.mb.on{background:rgba(61,142,245,.12);border-color:rgba(61,142,245,.28);color:var(--blue);}
+.mb:hover:not(.on){background:var(--g2);}
+
+/* ═══════════════════════════════════════
+   BUTTON GRIDS
+═══════════════════════════════════════ */
+.grid{display:grid;gap:6px;}
+.g4{grid-template-columns:repeat(4,1fr);}
+.g5{grid-template-columns:repeat(5,1fr);}
+
+.btn{
+  border:1px solid var(--brd);border-radius:13px;
+  font-family:'Cairo',sans-serif;font-size:.93rem;font-weight:600;
+  cursor:pointer;user-select:none;
+  display:flex;align-items:center;justify-content:center;
+  min-height:52px;aspect-ratio:1;
+  position:relative;overflow:hidden;
+  transition:border-color .15s ease, box-shadow .15s ease;
+  /* GPU layer for smooth transforms */
+  will-change:transform;
+  transform:translateZ(0);
+}
+/* Ripple */
+.btn::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:radial-gradient(circle at center,rgba(255,255,255,.28) 0%,transparent 65%);
+  opacity:0;transform:scale(0);
+  transition:opacity .5s ease, transform .5s ease;
+}
+.btn:active::after{opacity:1;transform:scale(1);transition:none;}
+.btn:active{transform:scale(0.88) translateZ(0);transition:transform .08s ease;}
+
+/* types */
+.bn{background:var(--g2);color:var(--txt);box-shadow:0 2px 8px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.05);}
+.bn:hover{background:var(--g3);border-color:var(--brd2);}
+.bo{background:rgba(61,142,245,.1);color:var(--blue);border-color:rgba(61,142,245,.2);box-shadow:0 2px 10px rgba(61,142,245,.07);}
+.bo:hover{background:rgba(61,142,245,.18);box-shadow:0 0 20px rgba(61,142,245,.15);}
+.bf{background:rgba(245,197,24,.07);color:var(--gold);border-color:rgba(245,197,24,.17);font-size:.77rem;}
+.bf:hover{background:rgba(245,197,24,.14);box-shadow:0 0 18px rgba(245,197,24,.12);}
+.bc{background:rgba(245,82,82,.08);color:var(--red);border-color:rgba(245,82,82,.18);}
+.bc:hover{background:rgba(245,82,82,.15);}
+.be{
+  background:linear-gradient(135deg,var(--gold) 0%,#d4930e 100%);
+  color:#0a0b0e;border-color:transparent;font-size:1.35rem;font-weight:900;
+  box-shadow:0 4px 18px rgba(245,197,24,.35),0 2px 6px rgba(0,0,0,.3);
+  transition:box-shadow .2s ease, transform .08s ease;
+}
+.be:hover{box-shadow:0 6px 26px rgba(245,197,24,.5),0 2px 6px rgba(0,0,0,.3);}
+.be:active{transform:scale(0.9) translateZ(0);}
+.b0{grid-column:span 2;aspect-ratio:auto;} /* zero btn wide */
+.b2r{grid-row:span 2;aspect-ratio:auto;}   /* equal spans 2 rows */
+
+/* ═══════════════════════════════════════
+   CARDS (shared)
+═══════════════════════════════════════ */
+.card{
+  background:var(--g2);backdrop-filter:blur(24px);
+  border:1px solid var(--brd);border-radius:var(--R);
+  padding:15px;margin-bottom:9px;
+  box-shadow:var(--sh);
+}
+.card-ttl{
+  font-size:.85rem;font-weight:700;color:var(--gold);
+  margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;
+}
+.card-ttl-l{display:flex;align-items:center;gap:6px;}
+
+/* ═══════════════════════════════════════
+   INPUTS
+═══════════════════════════════════════ */
+.inp{
+  width:100%;background:rgba(255,255,255,.055);border:1px solid var(--brd);
+  border-radius:10px;padding:9px 13px;color:var(--txt);
+  font-family:'Cairo',sans-serif;font-size:.86rem;outline:none;
+  transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.inp:focus{border-color:rgba(61,142,245,.5);background:rgba(61,142,245,.045);box-shadow:0 0 0 3px rgba(61,142,245,.07);}
+.inp::placeholder{color:var(--sub2);}
+
+.sel{
+  flex:1;background:rgba(255,255,255,.065);border:1px solid var(--brd);
+  border-radius:10px;padding:9px 12px;color:var(--txt);
+  font-family:'Cairo',sans-serif;font-size:.82rem;outline:none;cursor:pointer;
+  transition:border-color .2s ease;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(232,238,255,.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:left 10px center;
+  padding-left:28px;
+}
+.sel:focus{border-color:rgba(61,142,245,.45);}
+option{background:#0c1020;}
+
+.row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.lbl{font-size:.73rem;color:var(--sub);min-width:80px;flex-shrink:0;}
+
+/* ═══════════════════════════════════════
+   BUTTONS (action)
+═══════════════════════════════════════ */
+.abtn{
+  background:linear-gradient(135deg,var(--blue),var(--blue2));
+  border:none;border-radius:10px;color:#fff;
+  font-family:'Cairo',sans-serif;font-size:.83rem;font-weight:700;
+  padding:9px 18px;cursor:pointer;
+  box-shadow:0 4px 14px rgba(61,142,245,.25);
+  transition:transform .2s var(--spring), box-shadow .2s ease;
+}
+.abtn:hover{transform:scale(1.02);box-shadow:0 6px 22px rgba(61,142,245,.38);}
+.abtn:active{transform:scale(.97);}
+
+.sbtn{
+  background:rgba(255,255,255,.07);border:1px solid var(--brd);
+  border-radius:8px;color:var(--sub);font-family:'Cairo',sans-serif;
+  font-size:.7rem;padding:5px 10px;cursor:pointer;transition:all .18s ease;
+}
+.sbtn:hover{background:rgba(255,255,255,.13);color:var(--txt);}
+.sbtn.d{color:var(--red);}
+.sbtn.d:hover{background:rgba(245,82,82,.12);}
+
+.rbtn{
+  background:rgba(29,201,138,.09);border:1px solid rgba(29,201,138,.22);
+  border-radius:8px;color:var(--green);font-family:'Cairo',sans-serif;
+  font-size:.73rem;padding:5px 11px;cursor:pointer;
+  display:flex;align-items:center;gap:4px;transition:all .2s ease;
+}
+.rbtn:hover{background:rgba(29,201,138,.17);}
+.spin{display:inline-block;animation:sp 0.8s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+/* ═══════════════════════════════════════
+   RESULT BOX
+═══════════════════════════════════════ */
+.res{
+  background:rgba(29,201,138,.07);border:1px solid rgba(29,201,138,.2);
+  border-radius:9px;padding:11px 13px;color:var(--green);
+  font-family:'JetBrains Mono',monospace;font-size:.86rem;
+  margin-top:9px;word-break:break-all;line-height:1.75;
+  animation:resIn .3s var(--spring);
+}
+@keyframes resIn{from{opacity:0;transform:scale(.97);}to{opacity:1;transform:scale(1);}}
+.rv{display:flex;justify-content:space-between;padding:3px 0;}
+.rv:not(:last-child){border-bottom:1px solid rgba(29,201,138,.1);}
+.rk{color:var(--sub);font-size:.76rem;font-family:'Cairo',sans-serif;}
+.rval{color:var(--green);font-weight:700;}
+
+/* ═══════════════════════════════════════
+   HISTORY
+═══════════════════════════════════════ */
+.hi{
+  background:rgba(255,255,255,.038);border:1px solid var(--brd);
+  border-radius:13px;padding:11px 13px;margin-bottom:7px;
+  display:flex;justify-content:space-between;align-items:center;gap:9px;
+  transition:background .18s ease, border-color .18s ease;
+  animation:fadeUp .25s ease;
+}
+.hi:hover{background:rgba(255,255,255,.065);border-color:var(--brd2);}
+.hi-l{flex:1;min-width:0;}
+.hi-eq{font-family:'JetBrains Mono',monospace;font-size:.76rem;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hi-res{font-family:'JetBrains Mono',monospace;font-size:1.02rem;font-weight:700;color:var(--gold);}
+.hi-meta{font-size:.6rem;color:var(--sub2);margin-top:2px;display:flex;align-items:center;gap:6px;}
+.hi-ops{
+  display:inline-flex;align-items:center;gap:3px;
+  background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);
+  border-radius:5px;padding:1px 6px;color:var(--purple);font-size:.6rem;
+}
+.hi-btns{display:flex;gap:5px;flex-shrink:0;}
+
+/* ═══════════════════════════════════════
+   COUNTER GRID
+═══════════════════════════════════════ */
+.cg{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;}
+.cc{
+  background:rgba(255,255,255,.04);border:1px solid var(--brd);
+  border-radius:12px;padding:13px 10px;text-align:center;
+  transition:background .18s ease;
+}
+.cc:hover{background:rgba(255,255,255,.065);}
+.cn{font-size:1.75rem;font-weight:900;color:var(--gold);font-family:'JetBrains Mono',monospace;line-height:1;}
+.cl{font-size:.65rem;color:var(--sub);margin-top:4px;}
+
+/* ═══════════════════════════════════════
+   CURRENCY
+═══════════════════════════════════════ */
+.swap{
+  background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);
+  border-radius:9px;color:var(--gold);font-size:1.1rem;padding:8px 11px;
+  cursor:pointer;transition:transform .3s var(--spring), background .2s ease;flex-shrink:0;
+}
+.swap:hover{transform:rotate(180deg) scale(1.1);background:rgba(245,197,24,.18);}
+.ob{
+  background:rgba(245,82,82,.09);border:1px solid rgba(245,82,82,.2);
+  border-radius:7px;color:var(--red);font-size:.68rem;padding:3px 8px;
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.55;}}
+.rr{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 2px;border-bottom:1px solid rgba(255,255,255,.04);
+  font-size:.82rem;transition:padding .18s ease;cursor:default;
+}
+.rr:last-child{border-bottom:none;}
+.rr:hover{padding-right:6px;}
+.rv2{font-family:'JetBrains Mono',monospace;color:var(--gold);font-weight:600;}
+
+/* ═══════════════════════════════════════
+   FX BIG RESULT
+═══════════════════════════════════════ */
+.fx-res{
+  background:linear-gradient(135deg,rgba(29,201,138,.08),rgba(61,142,245,.08));
+  border:1px solid rgba(29,201,138,.18);
+  border-radius:12px;padding:14px 16px;margin-top:10px;
+  animation:resIn .3s var(--spring);
+}
+.fx-res-amount{font-size:1.6rem;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--green);}
+.fx-res-label{font-size:.72rem;color:var(--sub);margin-top:3px;}
+.fx-rate-info{font-size:.68rem;color:var(--sub2);margin-top:6px;font-family:'JetBrains Mono',monospace;}
+
+/* ═══════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════ */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:99px;}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media(max-width:390px){
+  .btn{min-height:46px;font-size:.85rem;}
+  .scr-num{font-size:1.85rem;}
+  .nb{font-size:.68rem;}
+}
+@media(max-width:340px){
+  #app{padding:7px 7px 75px;}
+  .grid{gap:4px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════ SPLASH ════════ -->
+<div id="splash">
+  <div class="sp-orbit">
+    <div class="sp-ring sp-r1"></div>
+    <div class="sp-ring sp-r2"></div>
+    <div class="sp-ring sp-r3"></div>
+    <div class="sp-ico">🧮</div>
+  </div>
+  <div class="sp-title">Smart Calculator Pro</div>
+  <div class="sp-sub">Python Precision Engine</div>
+  <div class="sp-track"><div class="sp-fill"></div></div>
+</div>
+
+<!-- ════════ APP ════════ -->
+<div id="app">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-l">
+      <div class="hdr-ico">🧮</div>
+      <div>
+        <div class="hdr-name">Smart Calculator Pro</div>
+        <div class="hdr-sub">دقة 50 منزلة عشرية • Python Engine</div>
+      </div>
+    </div>
+    <div class="hdr-r">
+      <div class="hdr-num" id="h-total">0</div>
+      <div class="hdr-lbl">إجمالي العمليات</div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <button class="nb on" data-tab="calc" onclick="goTab(this,'calc')">
+      <span class="ni">🔢</span>حاسبة
+    </button>
+    <button class="nb" data-tab="hist" onclick="goTab(this,'hist')">
+      <span class="ni">📋</span>السجل
+    </button>
+    <button class="nb" data-tab="fx" onclick="goTab(this,'fx')">
+      <span class="ni">💱</span>العملات
+    </button>
+  </nav>
+
+  <!-- ══ TAB: CALC ══ -->
+  <div id="tab-calc" class="tab on">
+
+    <!-- Screen -->
+    <div class="screen">
+      <!-- AI explanation panel (inside screen, above result) -->
+      <div class="ai-panel" id="ai-panel">
+        <div class="ai-panel-inner" id="ai-text"></div>
+      </div>
+
+      <!-- Op-count badge -->
+      <div class="op-badge" id="op-badge"></div>
+
+      <div class="scr-prev" id="scr-prev"></div>
+      <div class="scr-eq"   id="scr-eq"></div>
+      <div class="scr-num"  id="scr-num">0</div>
+
+      <div class="scr-acts">
+        <button class="sa" id="cp-btn" onclick="copyNum()">نسخ الناتج</button>
+        <button class="sa" onclick="copyEq()">نسخ المعادلة</button>
+        <button class="sa ai" id="ai-btn" onclick="explainAI()">🤖 اشرح لي</button>
+      </div>
+    </div>
+
+    <!-- Mode -->
+    <div class="modes">
+      <button class="mb on" id="m-simple" onclick="setMode('simple')">عادي</button>
+      <button class="mb"    id="m-sci"    onclick="setMode('sci')">علمي</button>
+    </div>
+
+    <!-- Simple grid -->
+    <div class="grid g4" id="g-simple">
+      <button class="btn bc" onclick="p('C')">C</button>
+      <button class="btn bc" onclick="p('⌫')">⌫</button>
+      <button class="btn bo" onclick="p('%')">%</button>
+      <button class="btn bo" onclick="p('÷')">÷</button>
+
+      <button class="btn bn" onclick="p('7')">7</button>
+      <button class="btn bn" onclick="p('8')">8</button>
+      <button class="btn bn" onclick="p('9')">9</button>
+      <button class="btn bo" onclick="p('×')">×</button>
+
+      <button class="btn bn" onclick="p('4')">4</button>
+      <button class="btn bn" onclick="p('5')">5</button>
+      <button class="btn bn" onclick="p('6')">6</button>
+      <button class="btn bo" onclick="p('-')">−</button>
+
+      <button class="btn bn" onclick="p('1')">1</button>
+      <button class="btn bn" onclick="p('2')">2</button>
+      <button class="btn bn" onclick="p('3')">3</button>
+      <button class="btn bo" onclick="p('+')">+</button>
+
+      <button class="btn bn" onclick="p('±')">±</button>
+      <button class="btn bn b0" onclick="p('0')">0</button>
+      <button class="btn bn" onclick="p('.')">.</button>
+      <button class="btn be" onclick="p('=')">=</button>
+    </div>
+
+    <!-- Scientific grid -->
+    <div class="grid g5" id="g-sci" style="display:none">
+      <button class="btn bf" onclick="p('sin')">sin</button>
+      <button class="btn bf" onclick="p('cos')">cos</button>
+      <button class="btn bf" onclick="p('tan')">tan</button>
+      <button class="btn bf" onclick="p('log')">log</button>
+      <button class="btn bf" onclick="p('ln')">ln</button>
+
+      <button class="btn bf" onclick="p('π')">π</button>
+      <button class="btn bf" onclick="p('e_c')">e</button>
+      <button class="btn bf" onclick="p('(')">(</button>
+      <button class="btn bf" onclick="p(')')">)</button>
+      <button class="btn bf" onclick="p('!')">n!</button>
+
+      <button class="btn bf" onclick="p('√')">√</button>
+      <button class="btn bf" onclick="p('x²')">x²</button>
+      <button class="btn bf" onclick="p('x³')">x³</button>
+      <button class="btn bf" onclick="p('xʸ')">xʸ</button>
+      <button class="btn bf" onclick="p('1/x')">1/x</button>
+
+      <button class="btn bc" onclick="p('C')">C</button>
+      <button class="btn bc" onclick="p('CE')">CE</button>
+      <button class="btn bc" onclick="p('⌫')">⌫</button>
+      <button class="btn bo" onclick="p('mod')">mod</button>
+      <button class="btn bo" onclick="p('%')">%</button>
+
+      <button class="btn bn" onclick="p('7')">7</button>
+      <button class="btn bn" onclick="p('8')">8</button>
+      <button class="btn bn" onclick="p('9')">9</button>
+      <button class="btn bo" onclick="p('÷')">÷</button>
+      <button class="btn bo" onclick="p('±')">±</button>
+
+      <button class="btn bn" onclick="p('4')">4</button>
+      <button class="btn bn" onclick="p('5')">5</button>
+      <button class="btn bn" onclick="p('6')">6</button>
+      <button class="btn bo" onclick="p('×')">×</button>
+      <!-- equal spans 2 rows -->
+      <button class="btn be b2r" onclick="p('=')" style="min-height:auto;aspect-ratio:auto;grid-row:span 2;">=</button>
+
+      <button class="btn bn" onclick="p('1')">1</button>
+      <button class="btn bn" onclick="p('2')">2</button>
+      <button class="btn bn" onclick="p('3')">3</button>
+      <button class="btn bo" onclick="p('-')">−</button>
+
+      <button class="btn bn b0" onclick="p('0')" style="aspect-ratio:auto;">0</button>
+      <button class="btn bn" onclick="p('.')">.</button>
+      <button class="btn bo" onclick="p('+')">+</button>
+    </div>
+  </div><!-- /tab-calc -->
+
+  <!-- ══ TAB: HISTORY ══ -->
+  <div id="tab-hist" class="tab">
+    <div class="card">
+      <div class="card-ttl">
+        <div class="card-ttl-l">📋 سجل العمليات <span id="h-cnt" style="color:var(--sub);font-size:.72rem;"></span></div>
+        <button class="sbtn d" onclick="clearAll()">حذف الكل</button>
+      </div>
+      <input class="inp" id="h-search" placeholder="🔍 بحث في السجل..." oninput="renderHist()"/>
+    </div>
+    <div id="h-list"></div>
+
+    <div class="card" style="margin-top:4px;">
+      <div class="card-ttl"><div class="card-ttl-l">📊 إحصائيات</div></div>
+      <div class="cg">
+        <div class="cc"><div class="cn" id="c-ses">0</div><div class="cl">الجلسة</div></div>
+        <div class="cc"><div class="cn" id="c-day">0</div><div class="cl">اليوم</div></div>
+        <div class="cc"><div class="cn" id="c-wk">0</div><div class="cl">هذا الأسبوع</div></div>
+        <div class="cc"><div class="cn" id="c-mo">0</div><div class="cl">هذا الشهر</div></div>
+        <div class="cc" style="grid-column:span 2"><div class="cn" id="c-tot">0</div><div class="cl">الإجمالي الكلي</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: CURRENCY ══ -->
+  <div id="tab-fx" class="tab">
+    <div class="card">
+      <div class="card-ttl">
+        <div class="card-ttl-l">💱 تحويل العملات</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="rbtn" id="rfbtn" onclick="loadRates()">
+            <span id="rf-ico">🔄</span> تحديث
+          </button>
+          <span class="ob" id="ob" style="display:none">⚠️ غير متصل</span>
+        </div>
+      </div>
+      <div id="rt-info" style="font-size:.67rem;color:var(--sub2);margin-bottom:10px;"></div>
+
+      <input type="number" class="inp" id="fx-amt" placeholder="أدخل المبلغ..." style="margin-bottom:9px;"
+        onkeydown="if(event.key==='Enter') doConvert()"/>
+
+      <div class="row">
+        <select class="sel" id="fx-from">
+          <option value="KWD">🇰🇼 دينار كويتي</option>
+          <option value="SAR">🇸🇦 ريال سعودي</option>
+          <option value="AED">🇦🇪 درهم إماراتي</option>
+          <option value="QAR">🇶🇦 ريال قطري</option>
+          <option value="BHD">🇧🇭 دينار بحريني</option>
+          <option value="OMR">🇴🇲 ريال عماني</option>
+          <option value="EGP">🇪🇬 جنيه مصري</option>
+          <option value="USD" selected>🇺🇸 دولار أمريكي</option>
+          <option value="EUR">🇪🇺 يورو</option>
+          <option value="GBP">🇬🇧 جنيه إسترليني</option>
+        </select>
+        <button class="swap" onclick="swapFX()">⇄</button>
+        <select class="sel" id="fx-to">
+          <option value="KWD" selected>🇰🇼 دينار كويتي</option>
+          <option value="SAR">🇸🇦 ريال سعودي</option>
+          <option value="AED">🇦🇪 درهم إماراتي</option>
+          <option value="QAR">🇶🇦 ريال قطري</option>
+          <option value="BHD">🇧🇭 دينار بحريني</option>
+          <option value="OMR">🇴🇲 ريال عماني</option>
+          <option value="EGP">🇪🇬 جنيه مصري</option>
+          <option value="USD">🇺🇸 دولار أمريكي</option>
+          <option value="EUR">🇪🇺 يورو</option>
+          <option value="GBP">🇬🇧 جنيه إسترليني</option>
+        </select>
+      </div>
+
+      <!-- زرار التحويل الصريح -->
+      <button class="abtn" onclick="doConvert()" style="width:100%;margin-top:10px;padding:12px;font-size:.95rem;letter-spacing:.5px;">
+        💱 تحويل الآن
+      </button>
+      <div id="fx-out"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-ttl">📈 جدول الأسعار (مقابل الدولار)</div>
+      <div id="rates-tbl"></div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+/* ══════════════════════════════════════
+   CONFIG
+══════════════════════════════════════ */
+const API = ''; // same-origin; change to 'http://localhost:8000' for dev
+
+/* ══════════════════════════════════════
+   PRECISION MATH ENGINE (LOCAL — no server needed)
+   Uses integer arithmetic to avoid 0.1+0.2 bugs
+══════════════════════════════════════ */
+const Calc = (() => {
+  // Count decimal places in a number string
+  function decimals(s) {
+    const i = String(s).indexOf('.');
+    return i < 0 ? 0 : String(s).length - i - 1;
+  }
+  // Multiply two numbers precisely using integer arithmetic
+  function mul(a, b) {
+    const da = decimals(a), db = decimals(b);
+    const shift = da + db;
+    const ia = Math.round(parseFloat(a) * Math.pow(10, da));
+    const ib = Math.round(parseFloat(b) * Math.pow(10, db));
+    return (ia * ib) / Math.pow(10, shift);
+  }
+  // Add precisely
+  function add(a, b) {
+    const d = Math.max(decimals(a), decimals(b));
+    const f = Math.pow(10, d);
+    return (Math.round(parseFloat(a)*f) + Math.round(parseFloat(b)*f)) / f;
+  }
+  // Subtract precisely
+  function sub(a, b) {
+    const d = Math.max(decimals(a), decimals(b));
+    const f = Math.pow(10, d);
+    return (Math.round(parseFloat(a)*f) - Math.round(parseFloat(b)*f)) / f;
+  }
+  // Divide precisely
+  function div(a, b) {
+    if (parseFloat(b) === 0) throw new Error('قسمة على صفر');
+    // Use high-precision string to avoid float drift
+    const result = parseFloat(a) / parseFloat(b);
+    return parseFloat(result.toPrecision(14));
+  }
+
+  // Format result: remove useless trailing zeros
+  function fmt(n) {
+    if (!isFinite(n)) return 'خطأ';
+    let s = parseFloat(n.toPrecision(14)).toString();
+    // avoid scientific notation for normal numbers
+    if (s.includes('e') || s.includes('E')) {
+      s = parseFloat(n).toFixed(10).replace(/\.?0+$/, '');
+    }
+    return s;
+  }
+
+  // Tokenizer & evaluator supporting: + - × ÷ * / % ^ mod, parens, unary minus
+  function tokenize(expr) {
+    // Normalize
+    let e = expr
+      .replace(/×/g,'*').replace(/÷/g,'/')
+      .replace(/−/g,'-').replace(/\s+/g,'')
+      .replace(/\bmod\b/gi,'%')
+      .replace(/π/g,'3.14159265358979323846')
+      .replace(/\be\b/g,'2.71828182845904523536');
+    const tokens = [];
+    let i = 0;
+    while (i < e.length) {
+      // Number (including decimals)
+      if (/[\d\.]/.test(e[i])) {
+        let num = '';
+        while (i < e.length && /[\d\.]/.test(e[i])) num += e[i++];
+        tokens.push({t:'num', v: num});
+      }
+      // Function names
+      else if (/[a-zA-Z]/.test(e[i])) {
+        let fn = '';
+        while (i < e.length && /[a-zA-Z]/.test(e[i])) fn += e[i++];
+        tokens.push({t:'fn', v: fn.toLowerCase()});
+      }
+      // Operators & parens
+      else {
+        tokens.push({t:'op', v: e[i++]});
+      }
+    }
+    return tokens;
+  }
+
+  // Shunting-yard → RPN, then evaluate
+  function evaluate(expr) {
+    const tokens = tokenize(expr);
+    const output = [], ops = [];
+    const prec = {'+':1,'-':1,'*':2,'/':2,'%':2,'^':3};
+    const isLeftAssoc = op => op !== '^';
+
+    function applyOp(op, b, a) {
+      switch(op) {
+        case '+': return add(a, b);
+        case '-': return sub(a, b);
+        case '*': return mul(a, b);
+        case '/': return div(a, b);
+        case '%': return mul(a, 0.01); // percent of a
+        case '^': return Math.pow(parseFloat(a), parseFloat(b));
+        default: throw new Error('عملية غير معروفة: '+op);
+      }
+    }
+
+    function applyFn(fn, arg) {
+      const x = parseFloat(arg);
+      switch(fn) {
+        case 'sin': return Math.sin(x * Math.PI / 180);
+        case 'cos': return Math.cos(x * Math.PI / 180);
+        case 'tan':
+          if (Math.abs(Math.cos(x * Math.PI / 180)) < 1e-12) throw new Error('tan غير معرّف');
+          return Math.tan(x * Math.PI / 180);
+        case 'log': if(x<=0) throw new Error('log يتطلب رقماً موجباً'); return Math.log10(x);
+        case 'ln':  if(x<=0) throw new Error('ln يتطلب رقماً موجباً');  return Math.log(x);
+        case 'sqrt':case '√': if(x<0) throw new Error('الجذر التربيعي لرقم سالب'); return Math.sqrt(x);
+        case 'abs': return Math.abs(x);
+        case 'fact': { let f=1; for(let i=2;i<=Math.round(x);i++) f*=i; return f; }
+        default: throw new Error('دالة غير معروفة: '+fn);
+      }
+    }
+
+    let prevToken = null;
+    for (let i = 0; i < tokens.length; i++) {
+      const tok = tokens[i];
+      if (tok.t === 'num') {
+        output.push(parseFloat(tok.v));
+      }
+      else if (tok.t === 'fn') {
+        ops.push(tok);
+      }
+      else if (tok.v === '(') {
+        ops.push(tok);
+      }
+      else if (tok.v === ')') {
+        while (ops.length && ops[ops.length-1].v !== '(') {
+          const op = ops.pop();
+          if (op.t === 'fn') { const a = output.pop(); output.push(applyFn(op.v, a)); }
+          else { const b=output.pop(), a=output.pop(); output.push(applyOp(op.v,b,a)); }
+        }
+        ops.pop(); // remove '('
+        if (ops.length && ops[ops.length-1].t === 'fn') {
+          const fn = ops.pop();
+          const a = output.pop();
+          output.push(applyFn(fn.v, a));
+        }
+      }
+      else if (tok.t === 'op') {
+        // Handle unary minus
+        let op = tok.v;
+        const isUnary = op==='-' && (!prevToken || prevToken.v==='(' || (prevToken.t==='op' && prevToken.v!==')'));
+        if (isUnary) { output.push(0); } // push 0 so (0 - x) works
+        while (
+          ops.length &&
+          ops[ops.length-1].t==='op' &&
+          ops[ops.length-1].v!=='(' &&
+          ops[ops.length-1].v!==')' &&
+          ((isLeftAssoc(op) && prec[op] <= prec[ops[ops.length-1].v]) ||
+           (!isLeftAssoc(op) && prec[op] < prec[ops[ops.length-1].v]))
+        ) {
+          const top = ops.pop();
+          const b=output.pop(), a=output.pop();
+          output.push(applyOp(top.v, b, a));
+        }
+        ops.push({t:'op', v:op});
+      }
+      prevToken = tok;
+    }
+    while (ops.length) {
+      const op = ops.pop();
+      if (op.t === 'fn') { const a=output.pop(); output.push(applyFn(op.v,a)); }
+      else { const b=output.pop(), a=output.pop(); output.push(applyOp(op.v,b,a)); }
+    }
+    if (output.length !== 1) throw new Error('خطأ في التعبير');
+    return output[0];
+  }
+
+  function countOps(expr) {
+    let c = 0, prev = '';
+    for (const ch of expr) {
+      if ('+-×÷*/'.includes(ch) && /[\d\)\.]/.test(prev.trim())) c++;
+      if (ch.trim()) prev = ch;
+    }
+    return c;
+  }
+
+  return { evaluate, fmt, countOps };
+})();
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let D     = '0';
+let EQ    = '';
+let lastR = '';
+let lastFull = '';
+let hist  = load('sc_h', []);
+let cnts  = load('sc_c', {tot:0,ses:0,day:0,wk:0,mo:0});
+let rates = load('sc_rates', null);
+let calcMode = 'simple';
+
+/* ══════════════════════════════════════
+   SPLASH → APP
+══════════════════════════════════════ */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('out');
+    const a = document.getElementById('app');
+    a.classList.add('show');
+    setTimeout(() => document.getElementById('splash').remove(), 900);
+  }, 2100);
+  updateCntUI();
+  renderHist();
+  updHdr();
+  loadRates();
+});
+
+/* ══════════════════════════════════════
+   TAB SWITCHING
+══════════════════════════════════════ */
+function goTab(btn, name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  document.getElementById('tab-'+name).classList.add('on');
+  btn.classList.add('on');
+  if (name === 'hist') renderHist();
+}
+
+/* ══════════════════════════════════════
+   CALC MODE
+══════════════════════════════════════ */
+function setMode(m) {
+  calcMode = m;
+  document.getElementById('g-simple').style.display = m==='simple'?'grid':'none';
+  document.getElementById('g-sci').style.display    = m==='sci'?'grid':'none';
+  document.getElementById('m-simple').classList.toggle('on', m==='simple');
+  document.getElementById('m-sci').classList.toggle('on',    m==='sci');
+}
+
+/* ══════════════════════════════════════
+   DISPLAY UPDATE
+══════════════════════════════════════ */
+function updateDisplay() {
+  const el = document.getElementById('scr-num');
+  el.textContent = D;
+  el.classList.toggle('err', D === 'خطأ');
+  el.classList.add('pop');
+  setTimeout(() => el.classList.remove('pop'), 180);
+  document.getElementById('scr-eq').textContent = EQ || '';
+}
+
+function showBadge(count) {
+  if (!count) return;
+  const b = document.getElementById('op-badge');
+  b.textContent = `${count} عمليات`;
+  b.classList.add('show');
+  setTimeout(() => b.classList.remove('show'), 3500);
+}
+
+/* ══════════════════════════════════════
+   BUTTON PRESS — fully local, instant
+══════════════════════════════════════ */
+function p(btn) {
+  hideAI();
+
+  if (btn === 'C')  { D = '0'; EQ = ''; document.getElementById('scr-prev').textContent=''; updateDisplay(); return; }
+  if (btn === 'CE') { D = '0'; updateDisplay(); return; }
+  if (btn === '⌫')  { D = D.length<=1 ? '0' : D.slice(0,-1)||'0'; updateDisplay(); return; }
+  if (btn === '±')  { D = D.startsWith('-') ? D.slice(1) : D==='0'?'0':'-'+D; updateDisplay(); return; }
+  if (btn === '.')  { if(!D.includes('.')) D+='.'; updateDisplay(); return; }
+  if (btn === 'π')  { D = '3.14159265358979'; updateDisplay(); return; }
+  if (btn === 'e_c'){ D = '2.71828182845905'; updateDisplay(); return; }
+  if (btn === '(' || btn === ')') { EQ += btn; updateDisplay(); return; }
+
+  if ('0123456789'.includes(btn)) {
+    D = D==='0' ? btn : D+btn;
+    updateDisplay(); return;
+  }
+
+  // Binary operators
+  if (['+','-','×','÷','mod','xʸ'].includes(btn)) {
+    EQ = EQ + D + ' ' + btn + ' ';
+    D = '0'; updateDisplay(); return;
+  }
+
+  // ═══ EQUALS — instant local calculation ═══
+  if (btn === '=') {
+    const full = (EQ + D).trim();
+    if (!full || full === '0') return;
+    let res;
+    try {
+      const val = Calc.evaluate(full);
+      res = Calc.fmt(val);
+    } catch(e) {
+      res = 'خطأ';
+    }
+    const ops = Calc.countOps(full);
+    document.getElementById('scr-prev').textContent = full + ' =';
+    lastFull = full + ' = ' + res;
+    addHist(full, res, ops);
+    incCnt();
+    showBadge(ops);
+    EQ = ''; D = res; lastR = res;
+    updateDisplay();
+    return;
+  }
+
+  // Unary functions — instant local
+  const cur = parseFloat(D);
+  let res2 = null;
+  try {
+    if      (btn==='√')   res2 = Calc.fmt(Math.sqrt(cur));
+    else if (btn==='x²')  res2 = Calc.fmt(cur*cur);
+    else if (btn==='x³')  res2 = Calc.fmt(cur*cur*cur);
+    else if (btn==='1/x') res2 = cur===0?'خطأ':Calc.fmt(1/cur);
+    else if (btn==='%')   res2 = Calc.fmt(cur/100);
+    else if (btn==='!')   { let f=1; for(let i=2;i<=Math.round(cur);i++) f*=i; res2=Calc.fmt(f); }
+    else if (btn==='sin') res2 = Calc.fmt(Math.sin(cur*Math.PI/180));
+    else if (btn==='cos') res2 = Calc.fmt(Math.cos(cur*Math.PI/180));
+    else if (btn==='tan') res2 = Calc.fmt(Math.tan(cur*Math.PI/180));
+    else if (btn==='log') res2 = cur<=0?'خطأ':Calc.fmt(Math.log10(cur));
+    else if (btn==='ln')  res2 = cur<=0?'خطأ':Calc.fmt(Math.log(cur));
+  } catch { res2 = 'خطأ'; }
+
+  if (res2 !== null) { EQ = ''; D = res2; lastR = res2; updateDisplay(); }
+}
+
+/* ══════════════════════════════════════
+   API — only used for AI explain
+══════════════════════════════════════ */
+
+/* ══════════════════════════════════════
+   AI EXPLAIN (integrated in calc screen)
+══════════════════════════════════════ */
+async function explainAI() {
+  if (!lastR || lastR === 'خطأ') return;
+  const btn = document.getElementById('ai-btn');
+  btn.textContent = '⏳ ...';
+  btn.classList.add('loading');
+  hideAI();
+
+  const expr = lastFull || (document.getElementById('scr-prev').textContent || D);
+
+  try {
+    const r = await fetch(API+'/api/ai-explain', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({expression: expr})
+    });
+    const data = await r.json();
+    if (data.success) {
+      document.getElementById('ai-text').textContent = data.response;
+      document.getElementById('ai-panel').classList.add('show');
+    }
+  } catch {
+    document.getElementById('ai-text').textContent = '⚠️ تعذر الاتصال بالخادم';
+    document.getElementById('ai-panel').classList.add('show');
+  }
+  btn.textContent = '🤖 اشرح لي';
+  btn.classList.remove('loading');
+}
+
+function hideAI() {
+  document.getElementById('ai-panel').classList.remove('show');
+}
+
+/* ══════════════════════════════════════
+   COPY
+══════════════════════════════════════ */
+function copyNum() {
+  cp(D);
+  const b = document.getElementById('cp-btn');
+  b.textContent='✓ تم'; b.classList.add('ok');
+  setTimeout(()=>{b.textContent='نسخ الناتج';b.classList.remove('ok');},1400);
+}
+function copyEq() {
+  const eq = document.getElementById('scr-prev').textContent || EQ + ' = ' + D;
+  cp(eq);
+}
+function cp(t){ try{navigator.clipboard.writeText(t);}catch{} }
+
+/* ══════════════════════════════════════
+   KEYBOARD
+══════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('tab-calc').classList.contains('on')) return;
+  if (document.activeElement.tagName === 'INPUT') return;
+  const k = e.key;
+  if ('0123456789'.includes(k)) p(k);
+  else if (k==='+') p('+');
+  else if (k==='-') p('-');
+  else if (k==='*') p('×');
+  else if (k==='/'){e.preventDefault();p('÷');}
+  else if (k==='.') p('.');
+  else if (k==='%') p('%');
+  else if (k==='Enter'||k==='=') p('=');
+  else if (k==='Backspace') p('⌫');
+  else if (k==='Escape'||k==='Delete') p('C');
+  else if (k==='(') p('(');
+  else if (k===')') p(')');
+});
+
+/* ══════════════════════════════════════
+   HISTORY
+══════════════════════════════════════ */
+function addHist(eq, res, ops) {
+  hist.unshift({id:Date.now(), eq, res, ops,
+    time: new Date().toLocaleTimeString('ar'),
+    date: new Date().toLocaleDateString('ar')});
+  if (hist.length>999) hist.pop();
+  save('sc_h', hist);
+}
+
+function renderHist() {
+  const q = (document.getElementById('h-search')?.value||'').toLowerCase();
+  const fl = hist.filter(h => h.eq.toLowerCase().includes(q)||h.res.toLowerCase().includes(q));
+  const el = document.getElementById('h-cnt');
+  if(el) el.textContent='('+hist.length+')';
+  const list = document.getElementById('h-list');
+  if(!list) return;
+  if(!fl.length){
+    list.innerHTML='<div style="text-align:center;color:var(--sub);padding:36px 0;font-size:.82rem;">لا توجد عمليات</div>';
+    return;
+  }
+  list.innerHTML = fl.map(h=>`
+    <div class="hi">
+      <div class="hi-l">
+        <div class="hi-eq">${esc(h.eq)}</div>
+        <div class="hi-res">= ${esc(h.res)}</div>
+        <div class="hi-meta">
+          ${h.date} • ${h.time}
+          ${h.ops>0?`<span class="hi-ops">⚙️ ${h.ops} عملية</span>`:''}
+        </div>
+      </div>
+      <div class="hi-btns">
+        <button class="sbtn" onclick="reuse('${esc(h.res)}')">استخدام</button>
+        <button class="sbtn d" onclick="delH(${h.id})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function reuse(val){ D=val; EQ=''; goTabD('calc'); updateDisplay(); }
+function delH(id){ hist=hist.filter(h=>h.id!==id); save('sc_h',hist); renderHist(); }
+function clearAll(){ if(!confirm('حذف كل العمليات؟')) return; hist=[]; save('sc_h',hist); renderHist(); }
+function goTabD(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('tab-'+name).classList.add('on');
+  document.querySelector('[data-tab="'+name+'"]').classList.add('on');
+}
+
+/* ══════════════════════════════════════
+   COUNTERS
+══════════════════════════════════════ */
+function incCnt(){
+  cnts.tot++; cnts.ses++; cnts.day++; cnts.wk++; cnts.mo++;
+  save('sc_c',cnts); updateCntUI(); updHdr();
+}
+function updateCntUI(){
+  set('c-ses',cnts.ses||0); set('c-day',cnts.day||0);
+  set('c-wk',cnts.wk||0);   set('c-mo',cnts.mo||0);
+  set('c-tot',cnts.tot||0);
+}
+function updHdr(){ set('h-total',cnts.tot||0); }
+
+/* ══════════════════════════════════════
+   CURRENCY — fully browser-side, no server needed
+══════════════════════════════════════ */
+const CUR_NAMES = {
+  KWD:'🇰🇼 دينار كويتي', SAR:'🇸🇦 ريال سعودي', AED:'🇦🇪 درهم إماراتي',
+  QAR:'🇶🇦 ريال قطري',   BHD:'🇧🇭 دينار بحريني', OMR:'🇴🇲 ريال عماني',
+  EGP:'🇪🇬 جنيه مصري',   USD:'🇺🇸 دولار أمريكي', EUR:'🇪🇺 يورو',
+  GBP:'🇬🇧 جنيه إسترليني'
+};
+
+// Hardcoded fallback rates (USD base) — updated manually
+const FALLBACK = {
+  USD:1, KWD:0.3072, SAR:3.75, AED:3.6725,
+  QAR:3.64, BHD:0.376, OMR:0.385,
+  EGP:48.8, EUR:0.92, GBP:0.79
+};
+
+async function loadRates() {
+  const btn = document.getElementById('rfbtn');
+  const ico = document.getElementById('rf-ico');
+  const ti  = document.getElementById('rt-info');
+  const ob  = document.getElementById('ob');
+  if (ico) ico.className = 'spin';
+  if (btn) btn.disabled = true;
+  if (ti)  ti.textContent = 'جاري جلب الأسعار...';
+
+  let fetched = false;
+
+  // ── Source 1: exchangerate-api (free, no key, CORS-friendly) ──
+  try {
+    const r = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {cache:'no-cache'});
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.rates) {
+        rates = {};
+        Object.keys(CUR_NAMES).forEach(c => { rates[c] = d.rates[c] || FALLBACK[c]; });
+        rates.USD = 1;
+        save('sc_rates', rates);
+        save('sc_rates_ts', new Date().toLocaleString('ar'));
+        if (ti) ti.textContent = 'آخر تحديث: ' + new Date().toLocaleString('ar') + ' • exchangerate-api';
+        if (ob) ob.style.display = 'none';
+        fetched = true;
+      }
+    }
+  } catch(e) { console.warn('Source 1 failed:', e.message); }
+
+  // ── Source 2: open.er-api.com (free, no key) ──
+  if (!fetched) {
+    try {
+      const r = await fetch('https://open.er-api.com/v6/latest/USD', {cache:'no-cache'});
+      if (r.ok) {
+        const d = await r.json();
+        if (d && d.result === 'success' && d.rates) {
+          rates = {};
+          Object.keys(CUR_NAMES).forEach(c => { rates[c] = d.rates[c] || FALLBACK[c]; });
+          rates.USD = 1;
+          save('sc_rates', rates);
+          save('sc_rates_ts', new Date().toLocaleString('ar'));
+          if (ti) ti.textContent = 'آخر تحديث: ' + new Date().toLocaleString('ar') + ' • open.er-api';
+          if (ob) ob.style.display = 'none';
+          fetched = true;
+        }
+      }
+    } catch(e) { console.warn('Source 2 failed:', e.message); }
+  }
+
+  // ── Source 3: frankfurter.app (free, ECB rates) ──
+  if (!fetched) {
+    try {
+      const codes = Object.keys(CUR_NAMES).filter(c=>c!=='USD').join(',');
+      const r = await fetch(`https://api.frankfurter.app/latest?from=USD&to=${codes}`, {cache:'no-cache'});
+      if (r.ok) {
+        const d = await r.json();
+        if (d && d.rates) {
+          rates = { USD: 1 };
+          Object.keys(CUR_NAMES).forEach(c => {
+            rates[c] = c === 'USD' ? 1 : (d.rates[c] || FALLBACK[c]);
+          });
+          save('sc_rates', rates);
+          save('sc_rates_ts', new Date().toLocaleString('ar'));
+          if (ti) ti.textContent = 'آخر تحديث: ' + new Date().toLocaleString('ar') + ' • frankfurter (ECB)';
+          if (ob) ob.style.display = 'none';
+          fetched = true;
+        }
+      }
+    } catch(e) { console.warn('Source 3 failed:', e.message); }
+  }
+
+  // ── All failed: use saved cache or hardcoded fallback ──
+  if (!fetched) {
+    const cached = load('sc_rates', null);
+    const cachedTs = load('sc_rates_ts', null);
+    if (cached) {
+      rates = cached;
+      if (ti) ti.textContent = (cachedTs ? 'آخر تحديث: ' + cachedTs : '') + ' (محفوظ مسبقاً)';
+    } else {
+      rates = { ...FALLBACK };
+      if (ti) ti.textContent = 'أسعار تقريبية — لا يوجد اتصال بالإنترنت';
+    }
+    if (ob) ob.style.display = 'inline-flex';
+  }
+
+  renderRatesTable();
+  if (ico) ico.className = '';
+  if (btn) btn.disabled = false;
+}
+
+function renderRatesTable() {
+  const el = document.getElementById('rates-tbl');
+  if (!el || !rates) return;
+  el.innerHTML = Object.entries(CUR_NAMES).map(([c,n]) => `
+    <div class="rr">
+      <span>${n}</span>
+      <span class="rv2">${rates[c] ? Number(rates[c]).toFixed(4) : '—'}</span>
+    </div>`).join('');
+}
+
+function doConvert() {
+  const amtEl = document.getElementById('fx-amt');
+  const from  = document.getElementById('fx-from')?.value;
+  const to    = document.getElementById('fx-to')?.value;
+  const out   = document.getElementById('fx-out');
+  if (!out) return;
+
+  const amt = parseFloat(amtEl?.value);
+
+  // Validate amount
+  if (!amtEl?.value || isNaN(amt) || amt <= 0) {
+    out.innerHTML = `<div style="color:var(--red);font-size:.83rem;margin-top:10px;text-align:center;padding:10px;
+      background:rgba(245,82,82,.07);border-radius:10px;border:1px solid rgba(245,82,82,.2);">
+      ⚠️ أدخل مبلغاً صحيحاً أولاً</div>`;
+    return;
+  }
+
+  // Ensure rates are loaded
+  const r = rates || load('sc_rates', null) || FALLBACK;
+
+  if (!r[from] || !r[to]) {
+    out.innerHTML = `<div style="color:var(--sub);font-size:.83rem;margin-top:10px;text-align:center;padding:10px;">
+      جاري تحميل الأسعار...</div>`;
+    loadRates().then(() => doConvert());
+    return;
+  }
+
+  // Calculate: amt FROM → USD → TO
+  const inUSD  = amt / r[from];
+  const result = inUSD * r[to];
+  const rate1  = r[to] / r[from];   // 1 FROM = ? TO
+  const rate2  = r[from] / r[to];   // 1 TO   = ? FROM
+
+  const fmt = n => {
+    if (n === 0) return '0';
+    if (n >= 10000) return n.toLocaleString('ar', {minimumFractionDigits:2, maximumFractionDigits:2});
+    if (n >= 1)     return n.toFixed(4).replace(/\.?0+$/,'');
+    return n.toFixed(6).replace(/\.?0+$/,'');
+  };
+
+  out.innerHTML = `
+    <div class="fx-res" style="margin-top:12px;">
+      <div style="font-size:.72rem;color:var(--sub);margin-bottom:6px;">${amt} ${from} =</div>
+      <div class="fx-res-amount">${fmt(result)}&nbsp;<span style="font-size:1.1rem;color:var(--sub);font-weight:600;">${to}</span></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:4px;">
+        <div class="fx-rate-info">1 ${from} = ${fmt(rate1)} ${to}</div>
+        <div class="fx-rate-info">1 ${to} = ${fmt(rate2)} ${from}</div>
+      </div>
+    </div>`;
+}
+
+function swapFX() {
+  const f = document.getElementById('fx-from');
+  const t = document.getElementById('fx-to');
+  const tmp = f.value; f.value = t.value; t.value = tmp;
+  document.getElementById('fx-out').innerHTML = '';
+}
+
+/* ══════════════════════════════════════
+   UTILS
+══════════════════════════════════════ */
+function load(k,d){ try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;} }
+function save(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch{} }
+function set(id,v){ const e=document.getElementById(id);if(e)e.textContent=v; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
